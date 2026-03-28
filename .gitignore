@@ -1,0 +1,7 @@
+.idea
+*.asc
+*.key
+*.exe
+*.out
+*.o
+*.obj
