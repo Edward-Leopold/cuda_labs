@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <cstring>
 #include <cuda_runtime.h>
 
 void checkCuda(cudaError_t err, const char* msg) {
@@ -78,7 +79,9 @@ int main() {
             scanf("%d %d", &sx, &sy);
             uchar4 p = image[sy * w + sx];
             sample[j] = p;
-            sumR += p.x; sumG += p.y; sumB += p.z;
+            sumR += (double)p.x;
+            sumG += (double)p.y;
+            sumB += (double)p.z;
         }
         h_stats[i].avgR = sumR / np;
         h_stats[i].avgG = sumG / np;
@@ -86,20 +89,20 @@ int main() {
 
         double cov[3][3] = {0};
         for (int j = 0; j < np; j++) {
-            double dR = sample[j].x - h_stats[i].avgR;
-            double dG = sample[j].y - h_stats[i].avgG;
-            double dB = sample[j].z - h_stats[i].avgB;
+            double dR = (double)(sample[j].x - h_stats[i].avgR);
+            double dG = (double)(sample[j].y - h_stats[i].avgG);
+            double dB = (double)(sample[j].z - h_stats[i].avgB);
             cov[0][0] += dR * dR; cov[0][1] += dR * dG; cov[0][2] += dR * dB;
             cov[1][0] += dG * dR; cov[1][1] += dG * dG; cov[1][2] += dG * dB;
             cov[2][0] += dB * dR; cov[2][1] += dB * dG; cov[2][2] += dB * dB;
         }
         for(int r = 0; r < 3; ++r) {
-            for(int c = 0; c < 3; ++c) { 
-                cov[r][c] /= (np - 1);
+            for(int c = 0; c < 3; ++c) {
+                cov[r][c] /= (double)(np - 1);
             }
         }
 
-        double det = cov[0][0] * (cov[1][1] * cov[2][2] - cov[1][2] * cov[2][1]) 
+        double det = cov[0][0] * (cov[1][1] * cov[2][2] - cov[1][2] * cov[2][1])
                         - cov[0][1] * (cov[1][0] * cov[2][2] - cov[1][2] * cov[2][0]) + cov[0][2] * (cov[1][0] * cov[2][1] - cov[1][1] * cov[2][0]);
 
         h_stats[i].logDet = log(fabs(det));
